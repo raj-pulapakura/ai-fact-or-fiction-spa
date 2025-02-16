@@ -22,7 +22,7 @@ type GameResults = {
     rank: number;
 }[]
 
-export default function GameRound({ gameId, socket, players, maxRounds }: GameRoundProps) {
+export default function GameRound({  socket, players, maxRounds }: GameRoundProps) {
     const [roundLoading, setRoundLoading] = useState<boolean>(true);
     const [roundIndex, setRoundIndex] = useState<number>(0);
     const [fact, setFact] = useState<string>('');
