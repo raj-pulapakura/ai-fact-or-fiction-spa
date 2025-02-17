@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
 import GameRound from '../Game/GameRound';
+import logoUrl from "../../assets/logo.png";
 
 export type Players = Record<string, { name: string, isHost: boolean }>;
 
@@ -80,23 +81,33 @@ const LobbyPage: React.FC = () => {
     }, [stage])
 
     return (
-        <div>
-            <h1>AI Fact or Fiction</h1>
+        <div className="w-fit mx-auto mt-32">
+            <img src={logoUrl} />
 
             {
                 stage === Stage.GAME_CODE &&
-                <div>
-                    <div>
-                        <input
-                            placeholder="Enter code"
-                            value={gameId}
-                            onChange={(e) => setGameId(e.target.value)}
-                        />
-                        <button onClick={() => proceedToPlayerNameStage(false)}>Join</button>
+                <div className="w-8/12 mx-auto mt-16">
+                    <div className="bg-white p-5 rounded-lg shadow-[-10px_10px_black]">
+                        <div className="flex flex-col">
+                            <input
+                                className="border-[3px] border-primary rounded-lg p-2 text-2xl text-center"
+                                placeholder="CODE"
+                                value={gameId}
+                                onChange={(e) => setGameId(e.target.value)}
+                            />
+                            <button
+                                className="mt-5 bg-primary text-white p-2 text-2xl rounded-lg hover:shadow-[-6px_6px_black] hover:scale-105 transition"
+                                onClick={() => proceedToPlayerNameStage(false)}
+                            >Join</button>
+                        </div>
+
                     </div>
 
-                    <button onClick={() => proceedToPlayerNameStage(true)}>Create</button>
-                </div>
+                    <div className="mt-10 mx-auto p-5">
+                        <button className=" w-full text-2xl bg-white p-2 text-primary border-[3px] border-primary rounded-lg hover:shadow-[-6px_6px_black] hover:scale-105 transition" onClick={() => proceedToPlayerNameStage(true)}>Create</button>
+                    </div>
+                </div >
+
             }
 
             {
@@ -147,7 +158,7 @@ const LobbyPage: React.FC = () => {
                 stage === Stage.GAME &&
                 <GameRound socket={socket} gameId={gameId} players={players} maxRounds={maxRounds} />
             }
-        </div>
+        </div >
     );
 };
 
