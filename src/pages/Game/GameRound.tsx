@@ -4,6 +4,7 @@ import { Players } from '../Lobby/LobbyPage';
 import Section from '../../components/Section';
 import Option from '../../components/Option';
 import Icon from '../../components/Icon';
+import { QuestionType } from '../../types/QuestionType.enum';
 
 interface GameRoundProps {
     gameId: string;
@@ -28,8 +29,9 @@ type GameResults = {
 export default function GameRound({ socket, players, maxRounds }: GameRoundProps) {
     const [roundLoading, setRoundLoading] = useState<boolean>(true);
     const [roundIndex, setRoundIndex] = useState<number>(0);
-    const [fact, setFact] = useState<string>('');
-    const [vote, setVote] = useState<string | null>(null);
+    const [question, setQuestion] = useState<string>('');
+    const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.TRUE_FALSE);
+    const [vote, setVote] = useState<any>(null);
     const [voteSelected, setVoteSelected] = useState<boolean>(false);
     const [rummageIcon, setRummageIcon] = useState<string>('');
     const [timeRemaining, setTimeRemaining] = useState<number>(30);
@@ -41,10 +43,12 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
 
     useEffect(() => {
         if (socket) {
-            socket.on('newRound', (data: { fact: string, roundIndex: number }) => {
+            socket.on('newRound', (data: { question: string, questionType: QuestionType, roundIndex: number }) => {
                 setRoundLoading(false);
                 setStage(Stage.QUESTION);
-                setFact(data.fact);
+                setQuestion(data.question);
+                setQuestionType(data.questionType);
+                console.log(data.questionType);
                 setVote(null);
                 setVoteSelected(false);
                 setRoundIndex(data.roundIndex);
@@ -87,7 +91,7 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
         };
     }, [socket]);
 
-    const handleVote = (vote: string) => {
+    const handleVote = (vote: any) => {
         setVote(vote);
         socket?.emit('submitVote', { vote, timeRemaining });
     };
@@ -122,15 +126,18 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
                                 <Icon style={{ fontSize: "5rem" }}>{rummageIcon}</Icon>
                             </div>
                             : <Section className="mx-auto w-11/12">
-                                <p className="text-3xl">{roundIndex + 1}. {fact}</p>
-                                <div className="mt-12 flex gap-2">
-                                    <Option onClick={() => { handleVote('fact'); setVoteSelected(true); }} disabled={vote !== null}>
-                                        Fact
-                                    </Option>
-                                    <Option onClick={() => { handleVote('fiction'); setVoteSelected(true); }} disabled={vote !== null}>
-                                        Fiction
-                                    </Option>
-                                </div>
+                                <p className="text-3xl">{roundIndex + 1}. {question}</p>
+                                {
+                                    questionType === QuestionType.TRUE_FALSE &&
+                                    <div className="mt-12 flex gap-2">
+                                        <Option onClick={() => { handleVote(true); setVoteSelected(true); }} disabled={vote !== null}>
+                                            True
+                                        </Option>
+                                        <Option onClick={() => { handleVote(false); setVoteSelected(true); }} disabled={vote !== null}>
+                                            False
+                                        </Option>
+                                    </div>
+                                }
                                 <div className="flex items-center justify-start mt-6 gap-1 text-4xl">
                                     <Icon style={{ fontSize: "2.8rem" }}>schedule</Icon>
                                     <h3>{timeRemaining}</h3>
