@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
 import { Players } from '../Lobby/LobbyPage';
+import Section from '../../components/Section';
+import Option from '../../components/Option';
+import Icon from '../../components/Icon';
 
 interface GameRoundProps {
     gameId: string;
@@ -22,13 +25,15 @@ type GameResults = {
     rank: number;
 }[]
 
-export default function GameRound({  socket, players, maxRounds }: GameRoundProps) {
+export default function GameRound({ socket, players, maxRounds }: GameRoundProps) {
     const [roundLoading, setRoundLoading] = useState<boolean>(true);
     const [roundIndex, setRoundIndex] = useState<number>(0);
     const [fact, setFact] = useState<string>('');
     const [vote, setVote] = useState<string | null>(null);
+    const [voteSelected, setVoteSelected] = useState<boolean>(false);
+    const [rummageIcon, setRummageIcon] = useState<string>('');
     const [timeRemaining, setTimeRemaining] = useState<number>(30);
-    const [roundResults, setRoundResults] = useState<Record<string, string>>({});
+    const [roundResults, setRoundResults] = useState<{ socketId: string, name: string, points: number }[]>([]);
     const [nextRoundTimer, setNextRoundTimer] = useState<number>(5);
     const [gameResults, setGameResults] = useState<GameResults>([]);
 
@@ -41,10 +46,11 @@ export default function GameRound({  socket, players, maxRounds }: GameRoundProp
                 setStage(Stage.QUESTION);
                 setFact(data.fact);
                 setVote(null);
+                setVoteSelected(false);
                 setRoundIndex(data.roundIndex);
             });
 
-            socket.on('roundResults', (data: { correctAnswer: string; results: Record<string, string> }) => {
+            socket.on('roundResults', (data: { correctAnswer: string; results: { socketId: string, name: string, points: number }[] }) => {
                 console.log('Round Results:', data);
                 console.log(socket.id);
                 setRoundResults(data.results);
@@ -66,7 +72,7 @@ export default function GameRound({  socket, players, maxRounds }: GameRoundProp
             });
 
             socket.on('gameOver', (data: { results: GameResults }) => {
-                console.log("GAme results", data.results);
+                console.log("Game results", data.results);
                 setGameResults(data.results);
                 setStage(Stage.GAME_OVER);
             });
@@ -83,44 +89,69 @@ export default function GameRound({  socket, players, maxRounds }: GameRoundProp
 
     const handleVote = (vote: string) => {
         setVote(vote);
-        socket?.emit('submitVote', { vote });
+        socket?.emit('submitVote', { vote, timeRemaining });
     };
+
+    useEffect(() => {
+        const rummageIcons = ["sprint", "lightbulb", "menu_book", "hotel_class", "cognition"].filter(icon => icon !== rummageIcon);
+
+        if (voteSelected) {
+            const interval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * rummageIcons.length);
+                setRummageIcon(rummageIcons[randomIndex]);
+            }, 300);
+            return () => clearInterval(interval);
+        }
+
+        return () => { };
+    }, [voteSelected]);
 
     if (roundLoading) {
         return <h1>Loading...</h1>;
     }
 
     return (
-        <div>
-            <h1>Game Round {roundIndex + 1}/{maxRounds}</h1>
-
+        <div className="w-full ">
             {
                 stage === Stage.QUESTION &&
-                <div>
-                    <p>{fact}</p>
-                    <div>
-                        <button onClick={() => handleVote('fact')} disabled={vote !== null}>
-                            Fact
-                        </button>
-                        <button onClick={() => handleVote('fiction')} disabled={vote !== null}>
-                            Fiction
-                        </button>
-                    </div>
-                    <h3>Time Remaining: {timeRemaining}s</h3>
-                </div>
+                <div className="mt-12">
+                    {
+                        voteSelected
+                            ? <div className="mx-auto w-11/12 flex flex-col items-center">
+                                <p>Genius?</p>
+                                <Icon style={{ fontSize: "5rem" }}>{rummageIcon}</Icon>
+                            </div>
+                            : <Section className="mx-auto w-11/12">
+                                <p className="text-3xl">{roundIndex + 1}. {fact}</p>
+                                <div className="mt-12 flex gap-2">
+                                    <Option onClick={() => { handleVote('fact'); setVoteSelected(true); }} disabled={vote !== null}>
+                                        Fact
+                                    </Option>
+                                    <Option onClick={() => { handleVote('fiction'); setVoteSelected(true); }} disabled={vote !== null}>
+                                        Fiction
+                                    </Option>
+                                </div>
+                                <div className="flex items-center justify-start mt-6 gap-1 text-4xl">
+                                    <Icon style={{ fontSize: "2.8rem" }}>schedule</Icon>
+                                    <h3>{timeRemaining}</h3>
+                                </div>
+                            </Section>
+                    }
+
+                </div >
             }
 
             {
                 stage === Stage.RESULTS &&
                 <div>
                     <h2>Round Results</h2>
-                    <ul>
-                        {Object.entries(roundResults).map(([playerId, isCorrect]) => (
-                            <li key={playerId}>
-                                {playerId === socket?.id ? 'You' : players[playerId].name} - {isCorrect ? 'Correct' : 'Incorrect'}
-                            </li>
+                    <div>
+                        {roundResults.map(({ socketId, name, points }) => (
+                            <p key={socketId}>
+                                {name} - {points} points
+                            </p>
                         ))}
-                    </ul>
+                    </div>
                     <h3>Next round starting in {nextRoundTimer}s</h3>
                 </div>
             }
@@ -139,7 +170,7 @@ export default function GameRound({  socket, players, maxRounds }: GameRoundProp
                     </ul>
                 </div>
             }
-        </div>
+        </div >
     );
 
 }

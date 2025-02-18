@@ -32,6 +32,7 @@ const LobbyPage: React.FC = () => {
         if (socket) {
             socket.on('updatePlayers', (data: { players: any }) => {
                 setPlayers(data.players);
+                console.log(data.players);
             });
 
             socket.on('gameCreated', (data: { gameId: string, hostName: string }) => {
@@ -88,12 +89,12 @@ const LobbyPage: React.FC = () => {
     }, [stage])
 
     return (
-        <div className="w-fit mx-auto mt-32">
-            <img src={logoUrl} />
+        <div className="mx-auto mt-16 flex flex-col items-center">
+            <img className={`${stage === Stage.GAME ? "w-[300px]" : "w-fit"} transition-all`} src={logoUrl} />
 
             {
                 stage === Stage.GAME_CODE &&
-                <div className="w-8/12 mx-auto mt-16">
+                <div className="w-1/2 mx-auto mt-16">
                     <Section>
                         <div className="flex flex-col">
                             <Input
@@ -106,7 +107,7 @@ const LobbyPage: React.FC = () => {
                     </Section>
 
                     <div className="mt-10 mx-auto p-5">
-                        <Button btype="border" onClick={() => proceedToPlayerNameStage(true)}>Create</Button>
+                        <Button className="w-full" btype="border" onClick={() => proceedToPlayerNameStage(true)}>Create</Button>
                     </div>
 
                 </div >
@@ -114,7 +115,7 @@ const LobbyPage: React.FC = () => {
 
             {
                 stage === Stage.PLAYER_NAME &&
-                <div className="w-8/12 mx-auto mt-16">
+                <div className="w-1/2 mx-auto mt-16">
                     <Section>
                         {
                             isHost
@@ -150,22 +151,30 @@ const LobbyPage: React.FC = () => {
 
             {
                 stage === Stage.LOBBY &&
-                <div>
-                    <Icon>star</Icon>
-                    <h1>Game Code: {gameId}</h1>
-                    <h2>Players:</h2>
-                    <ul>
+                <div className="text-center mx-auto mt-16">
+                    <h1 className="text-6xl text-center">
+                        Code: {gameId}
+                        <Icon
+                            className="ml-5 hover:cursor-pointer hover:scale-105 transition-all"
+                            style={{ fontSize: "3rem" }}
+                            onClick={() => navigator.clipboard.writeText(gameId)}
+                        >
+                            content_copy</Icon>
+                    </h1>
+                    <div className="mt-12 px-10 flex justify-center flex-wrap gap-10">
                         {Object.keys(players).map((socketId) => (
-                            <li key={socketId}>
-                                {players[socketId].name}
-                                {players[socketId].isHost && ' (Host)'}
-                            </li>
+                            <div className="bg-white p-3 w-fit rounded-lg shadow-[-10px_10px_purple] animate-jump-in animate-delay-300 animate-once" key={socketId}>
+                                <h2 className="text-2xl ">
+                                    {players[socketId].name}
+                                    {players[socketId].isHost && ' (Host)'}
+                                </h2>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                     {
                         isHost
-                            ? <button onClick={startGame}>Start Game</button>
-                            : <p>Waiting for host to start the game...</p>
+                            ? <Button className="absolute top-4 right-4 w-fit" onClick={startGame}>Start Game</Button>
+                            : <p className="mt-12">Waiting for host to start the game...</p>
                     }
                 </div>
             }
