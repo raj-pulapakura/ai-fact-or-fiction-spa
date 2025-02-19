@@ -10,10 +10,11 @@ interface GameRoundProps {
     gameId: string;
     socket: Socket | null;
     players: Players;
-    maxRounds: number;
+    numRounds: number;
 }
 
 enum Stage {
+    CATEGORY,
     QUESTION,
     RESULTS,
     GAME_OVER
@@ -26,57 +27,73 @@ type GameResults = {
     rank: number;
 }[]
 
-export default function GameRound({ socket, players, maxRounds }: GameRoundProps) {
+export default function GameRound({ socket }: GameRoundProps) {
+    const [categoryLoading, setCategoryLoading] = useState<boolean>(true);
     const [roundLoading, setRoundLoading] = useState<boolean>(true);
     const [roundIndex, setRoundIndex] = useState<number>(0);
     const [question, setQuestion] = useState<string>('');
     const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.TRUE_FALSE);
+    const [answers, setAnswers] = useState<string[]>([]); // For multiple choice questions
     const [vote, setVote] = useState<any>(null);
     const [voteSelected, setVoteSelected] = useState<boolean>(false);
     const [rummageIcon, setRummageIcon] = useState<string>('');
-    const [timeRemaining, setTimeRemaining] = useState<number>(30);
+    const [currentCategory, setCurrentCategory] = useState<string>('');
+    const [categoryCountdown, setCategoryCountdown] = useState<number>(5);
+    const [countdown, setCountdown] = useState<number>(15);
     const [roundResults, setRoundResults] = useState<{ socketId: string, name: string, points: number }[]>([]);
-    const [nextRoundTimer, setNextRoundTimer] = useState<number>(5);
+    const [nextRoundCountdown, setNextRoundCountdown] = useState<number>(5);
     const [gameResults, setGameResults] = useState<GameResults>([]);
 
-    const [stage, setStage] = useState<Stage>(Stage.QUESTION);
+    const [stage, setStage] = useState<Stage>(Stage.CATEGORY);
 
     useEffect(() => {
         if (socket) {
-            socket.on('newRound', (data: { question: string, questionType: QuestionType, roundIndex: number }) => {
+            socket.on('newRound', (data: {
+                question: string,
+                questionType: QuestionType,
+                answers: string[] | null,
+                roundIndex: number
+            }) => {
                 setRoundLoading(false);
                 setStage(Stage.QUESTION);
                 setQuestion(data.question);
                 setQuestionType(data.questionType);
-                console.log(data.questionType);
+                if (data.answers) setAnswers(data.answers);
                 setVote(null);
                 setVoteSelected(false);
                 setRoundIndex(data.roundIndex);
             });
 
             socket.on('roundResults', (data: { correctAnswer: string; results: { socketId: string, name: string, points: number }[] }) => {
-                console.log('Round Results:', data);
-                console.log(socket.id);
                 setRoundResults(data.results);
-                setTimeRemaining(0);
+                setCountdown(0);
                 setStage(Stage.RESULTS);
+            });
+
+            socket.on('newCategory', (category: string) => {
+                setCategoryLoading(false);
+                setCurrentCategory(category);
+            });
+
+            socket.on('categoryCountdown', (seconds: number) => {
+                setStage(Stage.CATEGORY);
+                setCategoryCountdown(seconds);
             });
 
             socket.on('countdown', (seconds: number) => {
                 if (stage === Stage.RESULTS) {
                     // Ignore countdown if showing results as the server will keep updating the countdown
-                    setTimeRemaining(0);
+                    setCountdown(0);
                     return;
                 };
-                setTimeRemaining(seconds);
+                setCountdown(seconds);
             });
 
             socket.on('next-round-countdown', (seconds: number) => {
-                setNextRoundTimer(seconds);
+                setNextRoundCountdown(seconds);
             });
 
             socket.on('gameOver', (data: { results: GameResults }) => {
-                console.log("Game results", data.results);
                 setGameResults(data.results);
                 setStage(Stage.GAME_OVER);
             });
@@ -93,7 +110,7 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
 
     const handleVote = (vote: any) => {
         setVote(vote);
-        socket?.emit('submitVote', { vote, timeRemaining });
+        socket?.emit('submitVote', { vote, timeRemaining: countdown });
     };
 
     useEffect(() => {
@@ -110,12 +127,20 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
         return () => { };
     }, [voteSelected]);
 
-    if (roundLoading) {
+    if (roundLoading && categoryLoading) {
         return <h1>Loading...</h1>;
     }
 
     return (
         <div className="w-full ">
+            {
+                stage === Stage.CATEGORY &&
+                <div className="mt-12">
+                    <h2>Category: {currentCategory}</h2>
+                    <h3>Next question starting in {categoryCountdown}s</h3>
+                </div>
+            }
+
             {
                 stage === Stage.QUESTION &&
                 <div className="mt-12">
@@ -138,9 +163,19 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
                                         </Option>
                                     </div>
                                 }
+                                {
+                                    questionType === QuestionType.MULTIPLE_CHOICE &&
+                                    <div className="mt-12 grid grid-cols-2 gap-2">
+                                        {answers.map((answer, index) => (
+                                            <Option key={index} onClick={() => { handleVote(index); setVoteSelected(true); }} disabled={vote !== null}>
+                                                {answer}
+                                            </Option>
+                                        ))}
+                                    </div>
+                                }
                                 <div className="flex items-center justify-start mt-6 gap-1 text-4xl">
                                     <Icon style={{ fontSize: "2.8rem" }}>schedule</Icon>
-                                    <h3>{timeRemaining}</h3>
+                                    <h3>{countdown}</h3>
                                 </div>
                             </Section>
                     }
@@ -159,7 +194,7 @@ export default function GameRound({ socket, players, maxRounds }: GameRoundProps
                             </p>
                         ))}
                     </div>
-                    <h3>Next round starting in {nextRoundTimer}s</h3>
+                    <h3>Next round starting in {nextRoundCountdown}s</h3>
                 </div>
             }
 

@@ -6,6 +6,7 @@ import Button from '../../components/Button';
 import Section from '../../components/Section';
 import Input from '../../components/Input';
 import Icon from '../../components/Icon';
+import { categories as allCategories } from "../../constants/categories";
 
 export type Players = Record<string, { name: string, isHost: boolean }>;
 
@@ -22,7 +23,15 @@ const LobbyPage: React.FC = () => {
     const [playerName, setPlayerName] = useState<string>('');
     const [players, setPlayers] = useState<Players>({});
     const [isHost, setIsHost] = useState<boolean>(false);
-    const [maxRounds, setMaxRounds] = useState<number>(3);
+    const [numRounds, setNumRounds] = useState<number>(3);
+    const [categories, setCategories] = useState<{ category: string, playerName: string, icon: string, description: string }[]>(
+        allCategories.map(category => ({
+            category: category.label,
+            playerName: "",
+            icon: category.icon,
+            description: category.description
+        }))
+    );
     const [stage, setStage] = useState<Stage>(Stage.GAME_CODE);
 
     // Game state
@@ -40,13 +49,25 @@ const LobbyPage: React.FC = () => {
                 setStage(Stage.LOBBY);
             });
 
-            socket.on('gameJoined', (data: { players: any }) => {
+            socket.on('gameJoined', (data: { players: any, selectedCategories: { value: string, playerName: string }[] }) => {
                 setPlayers(data.players);
                 setStage(Stage.LOBBY);
+                setCategories(categories => categories.map(c => {
+                    const selectedCategory = data.selectedCategories.find(sc => sc.value === c.category);
+                    if (selectedCategory) {
+                        return { ...c, playerName: selectedCategory.playerName };
+                    }
+                    return c;
+                }
+                ));
             });
 
             socket.on('gameStarted', () => {
                 setStage(Stage.GAME);
+            });
+
+            socket.on('categorySelected', (data: { category: string, playerName: string }) => {
+                setCategories(categories => categories.map(c => c.category === data.category ? { ...c, playerName: data.playerName } : c));
             });
         }
         return () => {
@@ -70,7 +91,7 @@ const LobbyPage: React.FC = () => {
         }
 
         if (isHost) {
-            socket?.emit('createGame', { playerName, maxRounds });
+            socket?.emit('createGame', { playerName, numRounds });
         } else if (gameId) {
             socket?.emit('joinGame', { gameId, playerName });
         }
@@ -88,9 +109,15 @@ const LobbyPage: React.FC = () => {
         }
     }, [stage])
 
+    const selectCategory = (category: string) => {
+        if (gameId) {
+            socket?.emit('selectCategory', { gameId, category });
+        }
+    }
+
     return (
         <div className="mx-auto mt-16 flex flex-col items-center">
-            <img className={`${stage === Stage.GAME ? "w-[300px]" : "w-fit"} transition-all`} src={logoUrl} />
+            <img className="absolute top-5 left-1/2 -translate-x-1/2 w-32" src={logoUrl} />
 
             {
                 stage === Stage.GAME_CODE &&
@@ -129,8 +156,8 @@ const LobbyPage: React.FC = () => {
                                         <Input
                                             className="w-full"
                                             type="number"
-                                            value={maxRounds}
-                                            onChange={(e: any) => setMaxRounds(parseInt(e.target.value))}
+                                            value={numRounds}
+                                            onChange={(e: any) => setNumRounds(parseInt(e.target.value))}
                                         />
                                     </div>
                                     <Button className="mt-4" onClick={handleJoinGame}>GO!</Button>
@@ -161,9 +188,15 @@ const LobbyPage: React.FC = () => {
                         >
                             content_copy</Icon>
                     </h1>
+                    {
+                        isHost
+                            ? <Button className="absolute top-4 right-4 w-fit" onClick={startGame}>Start Game</Button>
+                            : <p className="mt-12">Waiting for host to start the game...</p>
+                    }
+
                     <div className="mt-12 px-10 flex justify-center flex-wrap gap-10">
                         {Object.keys(players).map((socketId) => (
-                            <div className="bg-white p-3 w-fit rounded-lg shadow-[-10px_10px_purple] animate-jump-in animate-delay-300 animate-once" key={socketId}>
+                            <div className="bg-white p-3 w-fit rounded-lg shadow-[-10px_10px] shadow-primary animate-jump-in animate-delay-300 animate-once" key={socketId}>
                                 <h2 className="text-2xl ">
                                     {players[socketId].name}
                                     {players[socketId].isHost && ' (Host)'}
@@ -171,17 +204,38 @@ const LobbyPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    {
-                        isHost
-                            ? <Button className="absolute top-4 right-4 w-fit" onClick={startGame}>Start Game</Button>
-                            : <p className="mt-12">Waiting for host to start the game...</p>
-                    }
+
+
+                    <p className="mt-16" >While you're waiting, pick a category you'd like to play:</p>
+                    <div className="mt-12 w-1/2 mx-auto flex justify-center flex-wrap gap-10 mb-10">
+                        {categories.map(({ category, playerName: categoryPlayerName, icon }, index) => {
+                            const playerHasSelected = categories.some(c => c.playerName === playerName);
+                            const buttonDisabled = playerHasSelected || !!categoryPlayerName;
+
+                            return (
+                                <div className={`relative animate-jump-in animate-delay-${index * 100} animate-once`}>
+                                    <button
+                                        key={index}
+                                        className={`relative bg-white ${buttonDisabled ? "opacity-70" : "hover:shadow-[-10px_10px_violet]"} p-3 w-fit rounded-lg flex items-center gap-2 ${buttonDisabled ? "" : "hover:scale-105 transition-all"}`}
+                                        onClick={() => selectCategory(category)}
+                                        disabled={buttonDisabled}
+                                    >
+                                        <Icon style={{ fontSize: "2rem" }}>{icon}</Icon>
+                                        <h2 className="text-xl ">
+                                            {category}
+                                        </h2>
+                                    </button>
+                                    {categoryPlayerName && <p className="absolute -top-2 -right-2 text-md bg-primary text-white px-2 rounded-full">{categoryPlayerName}</p>}
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             }
 
             {
                 stage === Stage.GAME &&
-                <GameRound socket={socket} gameId={gameId} players={players} maxRounds={maxRounds} />
+                <GameRound socket={socket} gameId={gameId} players={players} numRounds={numRounds} />
             }
         </div >
     );
