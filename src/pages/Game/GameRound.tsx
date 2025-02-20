@@ -22,6 +22,7 @@ enum Stage {
 }
 
 type GameResults = { rank: number, name: string, points: number }[]
+type GameResultsGrouped = { rank: number, players: { name: string, points: number }[] }[]
 
 export default function GameRound({ socket }: GameRoundProps) {
     const [categoryLoading, setCategoryLoading] = useState<boolean>(true);
@@ -42,6 +43,7 @@ export default function GameRound({ socket }: GameRoundProps) {
     }>({ allOptions: [], correctOption: 0, results: [] });
     const [nextRoundCountdown, setNextRoundCountdown] = useState<number>(5);
     const [gameResults, setGameResults] = useState<GameResults>([]);
+    const [gameResultsGrouped, setGameResultsGrouped] = useState<GameResultsGrouped>([]);
     const [stage, setStage] = useState<Stage>(Stage.CATEGORY);
 
     useEffect(() => {
@@ -138,6 +140,28 @@ export default function GameRound({ socket }: GameRoundProps) {
         gameResults
     ]);
 
+    useEffect(() => {
+        if (!gameResults.length) return;
+
+        // Calculate game results grouped
+        let rank = 1;
+        let prevPoints = gameResults[0].points;
+        let gameResultsGrouped: GameResultsGrouped = [];
+        let group: { rank: number, players: { name: string, points: number }[] } = { rank, players: [] };
+        for (let i = 0; i < gameResults.length; i++) {
+            const { name, points } = gameResults[i];
+            if (points !== prevPoints) {
+                gameResultsGrouped.push(group);
+                group = { rank: ++rank, players: [] };
+            }
+            group.players.push({ name, points });
+            prevPoints = points;
+        }
+
+        gameResultsGrouped.push(group);
+        setGameResultsGrouped(gameResultsGrouped);
+    }, [gameResults]);
+
     if (roundLoading && categoryLoading) {
         return <h1>Loading...</h1>;
     }
@@ -227,16 +251,51 @@ export default function GameRound({ socket }: GameRoundProps) {
 
             {
                 stage === Stage.GAME_OVER && gameResults.length > 0 &&
-                <div>
-                    <h2>Game Over</h2>
-                    <h3>Final Results</h3>
-                    <ul>
-                        {gameResults.map((result, index) => (
-                            <li key={result.name}>
-                                {index + 1}. {result.name} - {result.points} points
-                            </li>
-                        ))}
-                    </ul>
+                <div className="mt-12 mx-auto text-center w-11/12">
+                    {gameResultsGrouped.length && <>
+                        <div className="w-full flex gap-3 mx-auto justify-center items-end">
+                            {
+                                gameResultsGrouped[1] &&
+                                <div className="flex flex-col gap-3 h-[300px] justify-end">
+                                    <p>{gameResultsGrouped[1].players.map(p => p.name).join(", ")}</p>
+                                    <div className="relative bg-slate-500 w-20 animate-slideInSecond rounded-md">
+                                        <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">2nd</p>
+                                    </div>
+                                    <p>{gameResultsGrouped[1].players[0].points}</p>
+                                </div>
+                            }
+                            {
+                                gameResultsGrouped[0] &&
+                                <div className="flex flex-col gap-3 h-[300px] justify-end">
+                                    <p>{gameResultsGrouped[0].players.map(p => p.name).join(", ")}</p>
+                                    <div className=" relative bg-blue-600 w-20 animate-slideInFirst rounded-md">
+                                        <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">1st</p>
+                                    </div>
+                                    <p>{gameResultsGrouped[0].players[0].points}</p>
+                                </div>
+                            }
+                            {
+                                gameResultsGrouped[2] &&
+                                <div className="flex flex-col gap-3 h-[300px] justify-end">
+                                    <p>{gameResultsGrouped[2].players.map(p => p.name).join(", ")}</p>
+                                    <div className="w-20 relative bg-orange-800 animate-slideInThird rounded-md">
+                                        <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">3rd</p>
+                                    </div>
+                                    <p>{gameResultsGrouped[2].players[0].points}</p>
+                                </div>
+                            }
+                        </div>
+                        {
+                            gameResultsGrouped.slice(3).map((group, index) => (
+                                <div key={index} className="flex gap-3 mt-16 w-1/2 mx-auto">
+                                    <div className="bg-white flex-1 flex justify-between items-center p-3 rounded-lg animate-stretchOut ">
+                                        <p>{group.rank}. {group.players.map(p => p.name).join(", ")}</p>
+                                        <p>{group.players[0].points}</p>
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </>}
                 </div>
             }
         </div >
