@@ -1,7 +1,7 @@
 export const categories: { label: string, icon: string, description: string }[] = [
     { label: "Geography", icon: "location_on", description: "Questions about countries, cities, and landmarks." },
     { label: "History", icon: "fast_forward", description: "Questions about historical events and figures." },
-    { label: "AI", icon: "network_intelligence", description: "Questions about artificial intelligence and machine learning." },
+    { label: "Generative AI", icon: "network_intelligence", description: "Questions about artificial intelligence and machine learning." },
     { label: "Chemistry", icon: "experiment", description: "Questions about chemical elements and reactions." },
     { label: "Biology", icon: "genetics", description: "Questions about living organisms and ecosystems." },
     { label: "Physics", icon: "biotech", description: "Questions about matter, energy, and forces." },

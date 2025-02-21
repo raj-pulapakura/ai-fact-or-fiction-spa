@@ -135,9 +135,9 @@ export default function GameRound({ socket }: GameRoundProps) {
     }, [voteSelected]);
 
     useEffect(() => {
-        console.log(gameResults);
+        console.log(roundResults);
     }, [
-        gameResults
+        roundResults
     ]);
 
     useEffect(() => {
@@ -222,6 +222,7 @@ export default function GameRound({ socket }: GameRoundProps) {
                     <div className="mt-6 grid grid-cols-2 gap-2">
                         {answers.map((answer, index) => (
                             <Option
+                                border={false}
                                 className={`animate-jump-in animate-delay-100 animate-once ${index === roundResults.correctOption ? "border-green-500 text-green-600" : ""}`}
                                 key={index}
                                 onClick={() => { handleVote(index); setVoteSelected(true); }}
@@ -258,7 +259,7 @@ export default function GameRound({ socket }: GameRoundProps) {
                                 gameResultsGrouped[1] &&
                                 <div className="flex flex-col gap-3 h-[300px] justify-end">
                                     <p>{gameResultsGrouped[1].players.map(p => p.name).join(", ")}</p>
-                                    <div className="relative bg-slate-500 w-20 animate-slideInSecond rounded-md">
+                                    <div className="h-[200px] relative bg-slate-500 w-20 rounded-md">
                                         <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">2nd</p>
                                     </div>
                                     <p>{gameResultsGrouped[1].players[0].points}</p>
@@ -268,7 +269,7 @@ export default function GameRound({ socket }: GameRoundProps) {
                                 gameResultsGrouped[0] &&
                                 <div className="flex flex-col gap-3 h-[300px] justify-end">
                                     <p>{gameResultsGrouped[0].players.map(p => p.name).join(", ")}</p>
-                                    <div className=" relative bg-blue-600 w-20 animate-slideInFirst rounded-md">
+                                    <div className="h-[300px] relative bg-blue-600 w-20 rounded-md">
                                         <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">1st</p>
                                     </div>
                                     <p>{gameResultsGrouped[0].players[0].points}</p>
@@ -278,7 +279,7 @@ export default function GameRound({ socket }: GameRoundProps) {
                                 gameResultsGrouped[2] &&
                                 <div className="flex flex-col gap-3 h-[300px] justify-end">
                                     <p>{gameResultsGrouped[2].players.map(p => p.name).join(", ")}</p>
-                                    <div className="w-20 relative bg-orange-800 animate-slideInThird rounded-md">
+                                    <div className="h-[100px] w-20 relative bg-orange-800 rounded-md">
                                         <p className="absolute bottom-1 text-white left-1/2 -translate-x-1/2">3rd</p>
                                     </div>
                                     <p>{gameResultsGrouped[2].players[0].points}</p>
