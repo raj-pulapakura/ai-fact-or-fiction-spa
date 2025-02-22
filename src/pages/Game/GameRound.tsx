@@ -4,7 +4,6 @@ import { Players } from '../Lobby/LobbyPage';
 import Section from '../../components/Section';
 import Option from '../../components/Option';
 import Icon from '../../components/Icon';
-import { QuestionType } from '../../types/QuestionType.enum';
 import { categories } from '../../constants/categories';
 
 interface GameRoundProps {

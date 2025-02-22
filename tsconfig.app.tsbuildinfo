@@ -1,0 +1,18 @@
+{
+    "root": [
+        "./src/global.d.ts",
+        "./src/main.tsx",
+        "./src/router.tsx",
+        "./src/components/button.tsx",
+        "./src/components/icon.tsx",
+        "./src/components/input.tsx",
+        "./src/components/option.tsx",
+        "./src/components/section.tsx",
+        "./src/constants/categories.ts",
+        "./src/hooks/usesocket.ts",
+        "./src/pages/game/gameround.tsx",
+        "./src/pages/lobby/lobbypage.tsx",
+        "./src/types/questiontype.enum.ts"
+    ],
+    "version": "5.6.3"
+}
