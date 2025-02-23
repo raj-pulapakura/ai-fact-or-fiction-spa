@@ -1,50 +1,26 @@
-# React + TypeScript + Vite
+# triv.ai 🏆📝
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Group 4](https://github.com/user-attachments/assets/2f0350e4-1055-493e-a4b1-8bd7cc6fcb36)
 
-Currently, two official plugins are available:
+**A multiplayer trivia game like Kahoot.it**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Overview
 
-## Expanding the ESLint configuration
+1. Join/Create a game
+2. Each person picks a category they want to play (or 5 random categories will be chosen)
+3. Answer trivia questions
+4. See your results at the end
+5. Both your speed and accuracy affect your points!
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## How it works
 
-- Configure the top-level `parserOptions` property like this:
+An LLM is used to generate the questions and the answers. Since the questions are AI-generated, the answers can very rarely be incorrect sorry about this :)
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+Your score for a particular question is determined by a formula that rewards you for answering fast. Of course, if you get the answer wrong, you won't get any points ;)
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Tech stack
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- Frontend: Vite + React.js + Tailwind.CSS
+- Backend: Node.js + Nest.js
+- AI: OpenAI API
+- Deployment: Azure
