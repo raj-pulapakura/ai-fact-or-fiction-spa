@@ -121,7 +121,7 @@ const LobbyPage: React.FC = () => {
 
             {
                 stage === Stage.GAME_CODE &&
-                <div className="w-1/2 mx-auto mt-16">
+                <div className="sm:w-11/12 md:w-8/12 lg:w-1/2 xl:w-1/3 2xl:w-1/4 mx-auto mt-16">
                     <Section>
                         <div className="flex flex-col">
                             <Input
@@ -142,7 +142,7 @@ const LobbyPage: React.FC = () => {
 
             {
                 stage === Stage.PLAYER_NAME &&
-                <div className="w-1/2 mx-auto mt-16">
+                <div className="sm:w-11/12 md:w-8/12 lg:w-1/2 xl:w-1/3 2xl:w-1/4 mx-auto mt-16">
                     <Section>
                         {
                             isHost
@@ -178,23 +178,31 @@ const LobbyPage: React.FC = () => {
 
             {
                 stage === Stage.LOBBY &&
-                <div className="text-center mx-auto mt-16">
+                <div className="text-center mx-auto mt-16 ">
                     <h1 className="text-6xl text-center">
                         Code: {gameId}
                         <Icon
-                            className="ml-5 hover:cursor-pointer hover:scale-105 transition-all"
+                            className="ml-5 hover:cursor-pointer hover:scale-105 transition-all hover:bg-pink-200 p-1 rounded-md"
                             style={{ fontSize: "3rem" }}
-                            onClick={() => navigator.clipboard.writeText(gameId)}
+                            onClick={() => {
+                                navigator.clipboard.writeText(gameId);
+                                alert(`${gameId} => Copied to clipboard!`);
+                            }}
                         >
                             content_copy</Icon>
                     </h1>
                     {
                         isHost
-                            ? <Button className="absolute top-4 right-4 w-fit" onClick={startGame}>Start Game</Button>
+                            ? <>
+                                <Button disabled={Object.keys(players).length == 1} className="hidden md:block absolute top-4 right-4 w-fit" onClick={startGame}>Start Game</Button>
+                                <Button disabled={Object.keys(players).length == 1} className="flex md:hidden absolute top-4 right-4 w-fit " onClick={startGame}>
+                                    <Icon style={{ fontSize: "2.3rem" }}>play_arrow</Icon>
+                                </Button>
+                            </>
                             : <p className="mt-12">Waiting for host to start the game...</p>
                     }
 
-                    <div className="mt-12 px-10 flex justify-center flex-wrap gap-10">
+                    <div className="sm:w-11/12 md:w-3/4 lg:w-7/12 xl:w-1/2 mt-12 px-10 mx-auto flex justify-center flex-wrap gap-10">
                         {Object.keys(players).map((socketId) => (
                             <div className="bg-white p-3 w-fit rounded-lg shadow-[-10px_10px] shadow-primary animate-jump-in animate-delay-300 animate-once" key={socketId}>
                                 <h2 className="text-2xl ">
@@ -206,8 +214,8 @@ const LobbyPage: React.FC = () => {
                     </div>
 
 
-                    <p className="mt-16" >While you're waiting, pick a category you'd like to play:</p>
-                    <div className="mt-12 w-1/2 mx-auto flex justify-center flex-wrap gap-10 mb-10">
+                    <p className="mt-16 px-10" >While you're waiting, pick a category you'd like to play:</p>
+                    <div className="sm:w-11/12 md:w-3/4 lg:w-7/12 xl:w-1/2 mt-12 mx-auto flex justify-center flex-wrap gap-10 mb-10">
                         {categories.map(({ category, playerName: categoryPlayerName, icon }, index) => {
                             const playerHasSelected = categories.some(c => c.playerName === playerName);
                             const buttonDisabled = playerHasSelected || !!categoryPlayerName;

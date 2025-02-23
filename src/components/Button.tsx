@@ -4,8 +4,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export default function Button({ btype = "primary", ...props }: ButtonProps) {
-    let className = "text-2xl p-2 rounded-lg hover:shadow-[-6px_6px_black] hover:scale-105 transition";
+    let className = "text-2xl p-2 rounded-lg transition";
 
+    if (props.disabled) {
+        className += " opacity-50 cursor-not-allowed";
+    } else {
+        className += " hover:scale-105 hover:shadow-[-6px_6px_black]"
+    }
     if (btype === "primary") {
         className += " bg-primary text-white";
     } else if (btype === "border") {
