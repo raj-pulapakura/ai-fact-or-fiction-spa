@@ -41,7 +41,6 @@ const LobbyPage: React.FC = () => {
         if (socket) {
             socket.on('updatePlayers', (data: { players: any }) => {
                 setPlayers(data.players);
-                console.log(data.players);
             });
 
             socket.on('gameCreated', (data: { gameId: string, hostName: string }) => {

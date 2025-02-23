@@ -134,12 +134,6 @@ export default function GameRound({ socket }: GameRoundProps) {
     }, [voteSelected]);
 
     useEffect(() => {
-        console.log(roundResults);
-    }, [
-        roundResults
-    ]);
-
-    useEffect(() => {
         if (!gameResults.length) return;
 
         // Calculate game results grouped
